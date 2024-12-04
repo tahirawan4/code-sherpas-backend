@@ -52,20 +52,26 @@ This will create the SQLite database file (`dev.db`) in the root directory.
 npx ts-node index.ts
 ```
 
+or
+
+```bash
+npm start
+```
+
 The server will start at [http://localhost:3001](http://localhost:3001).
 
 ---
 
 ## API Endpoints
 
-| Endpoint              | Method | Description                       |
-|-----------------------|--------|-----------------------------------|
-| `/deposit`            | POST   | Deposit money into an account     |
-| `/withdraw`           | POST   | Withdraw money from an account    |
-| `/transfer`           | POST   | Transfer money between accounts   |
-| `/statement/:iban`    | GET    | Get transactions for an account   |
-| `/create-account`     | POST   | Create a new account with IBAN    |
-| `/accounts`           | GET    | Fetch all accounts and balances   |
+| Endpoint           | Method | Description                     |
+| ------------------ | ------ | ------------------------------- |
+| `/deposit`         | POST   | Deposit money into an account   |
+| `/withdraw`        | POST   | Withdraw money from an account  |
+| `/transfer`        | POST   | Transfer money between accounts |
+| `/statement/:iban` | GET    | Get transactions for an account |
+| `/create-account`  | POST   | Create a new account with IBAN  |
+| `/accounts`        | GET    | Fetch all accounts and balances |
 
 ---
 

@@ -1,3 +1,4 @@
+require("dotenv").config();
 import express, { Request, Response } from "express";
 import bodyParser from "body-parser";
 import cors from "cors";
@@ -10,8 +11,7 @@ const prisma = new PrismaClient();
 app.use(cors());
 app.use(bodyParser.json());
 
-const PORT = 3001;
-
+const PORT = process.env.PORT || 3001;
 
 app.get("/accounts", async (req: Request, res: Response): Promise<void> => {
   try {
@@ -19,8 +19,8 @@ app.get("/accounts", async (req: Request, res: Response): Promise<void> => {
       select: {
         iban: true,
         balance: true,
-        createdAt: true
-      }
+        createdAt: true,
+      },
     });
 
     if (accounts.length === 0) {
@@ -34,27 +34,28 @@ app.get("/accounts", async (req: Request, res: Response): Promise<void> => {
   }
 });
 
+app.post(
+  "/create-account",
+  async (req: Request, res: Response): Promise<void> => {
+    const { initialBalance } = req.body;
 
-app.post("/create-account", async (req: Request, res: Response): Promise<void> => {
-  const { initialBalance } = req.body;
+    if (initialBalance < 0) {
+      res.status(400).json({ message: "Initial balance cannot be negative." });
+      return;
+    }
 
-  if (initialBalance < 0) {
-    res.status(400).json({ message: "Initial balance cannot be negative." });
-    return;
+    const iban = `IBAN-${uuidv4().slice(0, 8).toUpperCase()}`;
+
+    const account = await prisma.account.create({
+      data: {
+        iban,
+        balance: initialBalance || 0,
+      },
+    });
+
+    res.status(201).json(account);
   }
-
-  const iban = `IBAN-${uuidv4().slice(0, 8).toUpperCase()}`;
-  
-  const account = await prisma.account.create({
-    data: {
-      iban,
-      balance: initialBalance || 0,
-    },
-  });
-
-  res.status(201).json(account);
-});
-
+);
 
 // Deposit API
 app.post("/deposit", async (req: Request, res: Response): Promise<void> => {
@@ -124,8 +125,12 @@ app.post("/transfer", async (req: Request, res: Response): Promise<void> => {
     return;
   }
 
-  const fromAccount = await prisma.account.findUnique({ where: { iban: fromIban } });
-  const toAccount = await prisma.account.findUnique({ where: { iban: toIban } });
+  const fromAccount = await prisma.account.findUnique({
+    where: { iban: fromIban },
+  });
+  const toAccount = await prisma.account.findUnique({
+    where: { iban: toIban },
+  });
 
   if (!fromAccount || !toAccount) {
     res.status(404).json({ message: "Account not found" });
@@ -159,24 +164,26 @@ app.post("/transfer", async (req: Request, res: Response): Promise<void> => {
 });
 
 // Statement API
-app.get("/statement/:iban", async (req: Request, res: Response): Promise<void> => {
-  const { iban } = req.params;
+app.get(
+  "/statement/:iban",
+  async (req: Request, res: Response): Promise<void> => {
+    const { iban } = req.params;
 
-  const account = await prisma.account.findUnique({ where: { iban } });
-  if (!account) {
-    res.status(404).json({ message: "Account not found" });
-    return;
+    const account = await prisma.account.findUnique({ where: { iban } });
+    if (!account) {
+      res.status(404).json({ message: "Account not found" });
+      return;
+    }
+
+    const transactions = await prisma.transaction.findMany({
+      where: { accountId: account.id },
+      orderBy: { createdAt: "desc" },
+    });
+
+    res.status(200).json(transactions);
   }
-
-  const transactions = await prisma.transaction.findMany({
-    where: { accountId: account.id },
-    orderBy: { createdAt: "desc" },
-  });
-
-  res.status(200).json(transactions);
-});
+);
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
-
