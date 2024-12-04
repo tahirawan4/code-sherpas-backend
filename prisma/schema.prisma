@@ -1,0 +1,27 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Account {
+  id           Int           @id @default(autoincrement())
+  iban         String        @unique
+  balance      Float         @default(0.0)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  transactions Transaction[] // Add this to establish the reverse relation
+}
+
+model Transaction {
+  id          Int      @id @default(autoincrement())
+  accountId   Int
+  amount      Float
+  type        String
+  createdAt   DateTime @default(now())
+  Account     Account  @relation(fields: [accountId], references: [id])
+}
+
