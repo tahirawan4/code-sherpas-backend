@@ -1,4 +1,3 @@
-"use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -8,21 +7,17 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const dotenv_1 = __importDefault(require("dotenv"));
-dotenv_1.default.config();
-const express_1 = __importDefault(require("express"));
-const body_parser_1 = __importDefault(require("body-parser"));
-const cors_1 = __importDefault(require("cors"));
-const client_1 = require("@prisma/client");
-const uuid_1 = require("uuid");
-const app = (0, express_1.default)();
-const prisma = new client_1.PrismaClient();
-app.use((0, cors_1.default)());
-app.use(body_parser_1.default.json());
+import dotenv from "dotenv";
+dotenv.config();
+import express from "express";
+import bodyParser from "body-parser";
+import cors from "cors";
+import { PrismaClient } from "@prisma/client";
+import { v4 as uuidv4 } from "uuid";
+const app = express();
+const prisma = new PrismaClient();
+app.use(cors());
+app.use(bodyParser.json());
 const PORT = process.env.PORT || 3001;
 app.get("/accounts", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
@@ -55,7 +50,7 @@ app.post("/create-account", (req, res) => __awaiter(void 0, void 0, void 0, func
                 .json({ message: "Initial balance cannot be negative." });
             return;
         }
-        const iban = `IBAN-${(0, uuid_1.v4)().slice(0, 8).toUpperCase()}`;
+        const iban = `IBAN-${uuidv4().slice(0, 8).toUpperCase()}`;
         const account = yield prisma.account.create({
             data: {
                 iban,
